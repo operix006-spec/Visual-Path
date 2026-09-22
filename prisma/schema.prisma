@@ -1,0 +1,34 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Session {
+  id             String    @id @default(uuid())
+  name           String?
+  status         String    @default("UPLOADING") // UPLOADING, PROCESSING, ZIP_READY, COMPLETED, FAILED
+  outputFilePath String?   // Path to the final ZIP
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  images         Image[]
+}
+
+model Image {
+  id                String   @id @default(uuid())
+  sessionId         String
+  session           Session  @relation(fields: [sessionId], references: [id])
+  originalFilename  String
+  originalPath      String
+  analysisPath      String?
+  fileSize          Int
+  mimeType          String
+  processingStatus  String   @default("PENDING") // PENDING, OPTIMIZING, ANALYZING, COMPLETED, FAILED
+  aiClassification  String?
+  aiConfidence      Float?
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+}
