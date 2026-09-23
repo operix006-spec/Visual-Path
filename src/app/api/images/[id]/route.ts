@@ -29,7 +29,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       mimeType = image.mimeType || 'image/jpeg';
     }
 
-    const fileBuffer = await fs.readFile(filePath);
+    const fileBuffer = await fs.readFile(/*turbopackIgnore: true*/ filePath);
 
     return new NextResponse(fileBuffer, {
       headers: {
