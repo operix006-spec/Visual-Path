@@ -43,6 +43,12 @@ export default function SessionPage() {
     return () => clearInterval(interval);
   }, [id]);
 
+  useEffect(() => {
+    if (data?.status === 'CANCELLED') {
+      router.push('/');
+    }
+  }, [data?.status, router]);
+
   if (!data) {
     return (
       <main className="flex-1 flex items-center justify-center bg-[#0B0B0D] text-[#A1A1AA]">
@@ -143,6 +149,20 @@ export default function SessionPage() {
                 {status === "BUILDING_OUTPUT" ? "Generating..." : "Waiting"}
               </span>
             </div>
+          </div>
+          
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={async () => {
+                if (confirm('Are you sure you want to cancel the analysis?')) {
+                  await fetch(`/api/sessions/${id}/cancel`, { method: 'POST' });
+                  router.push('/');
+                }
+              }}
+              className="text-[13px] text-[#71717A] hover:text-[#EF4444] transition-colors border-b border-transparent hover:border-[#EF4444]"
+            >
+              Cancel Analysis
+            </button>
           </div>
         </div>
       ) : (

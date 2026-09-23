@@ -38,6 +38,13 @@ async function processSession(sessionId: string) {
     });
 
     for (const image of images) {
+      // Check for cancellation before processing each image
+      const currentSession = await db.session.findUnique({ where: { id: sessionId }, select: { status: true } });
+      if (currentSession?.status === 'CANCELLED') {
+        console.log(`Session ${sessionId} was cancelled by user.`);
+        break; // Exit the loop
+      }
+
       // 1. Optimize
       await db.image.update({
         where: { id: image.id },
@@ -113,6 +120,11 @@ Choose the single best matching category. Return ONLY the category name.`;
 
       // Small pacing delay to prevent hitting rate limit bursts
       await new Promise(res => setTimeout(res, 600));
+    }
+
+    const finalSession = await db.session.findUnique({ where: { id: sessionId }, select: { status: true } });
+    if (finalSession?.status === 'CANCELLED') {
+      return; // Do not package if cancelled
     }
 
     // Mark as building output
