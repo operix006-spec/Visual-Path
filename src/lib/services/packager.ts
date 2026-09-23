@@ -56,10 +56,11 @@ export class PackagerService {
         // Sanitize classification for folder name
         const folderName = classification.replace(/[^a-z0-9_-]/gi, '_');
         
-        // Inside the zip, structure will be: SessionName/Classification/OriginalFilename
-        const sessionFolderName = (session.name || 'Organized_Shoot').replace(/[^a-z0-9_-]/gi, '_');
+        // Inside the zip, structure will be: Classification/OriginalFilename (no extra folders)
+        const baseFilename = path.basename(image.originalFilename);
+        
         // archiver takes unix paths for internal zip structure
-        const zipInternalPath = `${sessionFolderName}/${folderName}/${image.originalFilename}`;
+        const zipInternalPath = `${folderName}/${baseFilename}`;
 
         archive.file(image.originalPath, { name: zipInternalPath });
       }
