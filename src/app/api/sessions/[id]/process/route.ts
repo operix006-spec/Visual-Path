@@ -28,7 +28,7 @@ async function processSession(sessionId: string) {
     if (!session) return;
 
     const isAuto = !session.classificationType || session.classificationType === 'auto';
-    let categoriesList = [];
+    let categoriesList: string[] = [];
     if (!isAuto && session.customCategories) {
       categoriesList = session.customCategories.split(',').map(c => c.trim()).filter(Boolean);
     }
