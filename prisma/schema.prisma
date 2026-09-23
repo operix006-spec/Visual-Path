@@ -8,13 +8,15 @@ generator client {
 }
 
 model Session {
-  id             String    @id @default(uuid())
-  name           String?
-  status         String    @default("UPLOADING") // UPLOADING, PROCESSING, ZIP_READY, COMPLETED, FAILED
-  outputFilePath String?   // Path to the final ZIP
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  images         Image[]
+  id                 String    @id @default(uuid())
+  name               String?
+  status             String    @default("UPLOADING") // UPLOADING, PROCESSING, ZIP_READY, COMPLETED, FAILED
+  outputFilePath     String?   // Path to the final ZIP
+  classificationType String?   // "product", "environment", "auto"
+  customCategories   String?   // comma-separated list of categories
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  images             Image[]
 }
 
 model Image {

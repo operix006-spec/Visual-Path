@@ -24,6 +24,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
 async function processSession(sessionId: string) {
   try {
+    const session = await db.session.findUnique({ where: { id: sessionId } });
+    if (!session) return;
+
+    const isAuto = !session.classificationType || session.classificationType === 'auto';
+    let categoriesList = [];
+    if (!isAuto && session.customCategories) {
+      categoriesList = session.customCategories.split(',').map(c => c.trim()).filter(Boolean);
+    }
+
     const images = await db.image.findMany({
       where: { sessionId, processingStatus: 'PENDING' }
     });
@@ -48,7 +57,11 @@ async function processSession(sessionId: string) {
         });
 
         const aiProvider = getAIProvider();
-        const instructions = `You are a professional photoshoot art director. Classify this photo into its photographic visual style:
+        let instructions = '';
+        let defaultCategory = 'Studio_Product';
+
+        if (isAuto || categoriesList.length === 0) {
+          instructions = `You are a professional photoshoot art director. Classify this photo into its photographic visual style:
 
 1. 'Dynamic_Action_Splash': High-speed action, floating ingredients/elements, flying particles, splash, levitation, dynamic commercial shot.
 2. 'Studio_Product': Clean product shot on studio backdrop (seamless white, black, or colored background), clean centered lighting.
@@ -57,14 +70,31 @@ async function processSession(sessionId: string) {
 5. 'Creative_Mood_Lighting': Dramatic shadows, colored/neon gel lights, cinematic dark moody atmosphere, artistic backlighting.
 
 Choose the single best matching photographic style.`;
+        } else {
+          const catString = categoriesList.map((c, i) => `${i + 1}. '${c}'`).join('\n');
+          instructions = `You are a professional photoshoot art director. The photographer has defined the following specific categories for this shoot based on ${session.classificationType}:
+
+${catString}
+
+Look at this image and assign it to EXACTLY one of these categories based on its visual features. If it perfectly matches none, assign it to the closest one.
+Choose the single best matching category. Return ONLY the category name.`;
+          defaultCategory = categoriesList[0];
+        }
 
         const aiResult = await aiProvider.analyzeImage(optimizedPath, instructions);
+        
+        // Ensure the AI returned one of the requested categories (if not auto)
+        let finalClassification = aiResult.classification;
+        if (!isAuto && categoriesList.length > 0) {
+           const matched = categoriesList.find(c => c.toLowerCase() === finalClassification.toLowerCase());
+           finalClassification = matched || defaultCategory;
+        }
 
         await db.image.update({
           where: { id: image.id },
           data: { 
             processingStatus: 'COMPLETED',
-            aiClassification: aiResult.classification,
+            aiClassification: finalClassification,
             aiConfidence: aiResult.confidence
           }
         });

@@ -15,6 +15,9 @@ export default function Home() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [classificationType, setClassificationType] = useState<"auto" | "product" | "environment">("auto");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -60,11 +63,14 @@ export default function Home() {
     setCurrentFileIndex(0);
 
     try {
-      // 1. Create Session
       const sessionRes = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: shootName.trim() || "Untitled Shoot" }),
+        body: JSON.stringify({ 
+          name: shootName.trim() || "Untitled Shoot",
+          classificationType,
+          customCategories: categories.join(',')
+        }),
       });
       const session = await sessionRes.json();
 
@@ -105,6 +111,8 @@ export default function Home() {
     setShootName("");
     setUploadProgress(0);
     setIsUploading(false);
+    setCategories([]);
+    setClassificationType("auto");
   };
 
   const totalSizeMB = (
@@ -244,6 +252,62 @@ export default function Home() {
               className="w-full bg-[#0B0B0D] border border-[#242428] focus:border-[#F5F5F5] rounded px-3.5 py-2.5 text-[14px] text-[#F5F5F5] placeholder-[#71717A] outline-none transition-colors"
             />
           </div>
+
+          {/* Classification Strategy Field */}
+          <div className="mb-6">
+            <label className="block text-[11px] font-semibold tracking-[0.16em] uppercase text-[#71717A] mb-2">
+              Classification Strategy
+            </label>
+            <div className="flex gap-2">
+              <button onClick={() => setClassificationType('auto')} className={`flex-1 py-2 rounded text-[13px] border ${classificationType === 'auto' ? 'bg-[#F5F5F5] text-[#0B0B0D] border-[#F5F5F5]' : 'bg-[#0B0B0D] text-[#A1A1AA] border-[#242428]'}`}>Auto (AI Choice)</button>
+              <button onClick={() => setClassificationType('product')} className={`flex-1 py-2 rounded text-[13px] border ${classificationType === 'product' ? 'bg-[#F5F5F5] text-[#0B0B0D] border-[#F5F5F5]' : 'bg-[#0B0B0D] text-[#A1A1AA] border-[#242428]'}`}>By Product</button>
+              <button onClick={() => setClassificationType('environment')} className={`flex-1 py-2 rounded text-[13px] border ${classificationType === 'environment' ? 'bg-[#F5F5F5] text-[#0B0B0D] border-[#F5F5F5]' : 'bg-[#0B0B0D] text-[#A1A1AA] border-[#242428]'}`}>By Environment</button>
+            </div>
+          </div>
+
+          {classificationType !== 'auto' && (
+            <div className="mb-6">
+              <label className="block text-[11px] font-semibold tracking-[0.16em] uppercase text-[#71717A] mb-2">Target Folders (Categories)</label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {categories.map((c, i) => (
+                  <div key={i} className="flex items-center gap-1 bg-[#17171A] border border-[#242428] rounded-full px-3 py-1 text-[13px] text-[#F5F5F5]">
+                    <span>{c}</span>
+                    <button onClick={() => setCategories(categories.filter((_, idx) => idx !== i))} className="text-[#71717A] hover:text-[#F5F5F5]">✕</button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (newCategory.trim() && !categories.includes(newCategory.trim())) {
+                        setCategories([...categories, newCategory.trim()]);
+                        setNewCategory('');
+                      }
+                    }
+                  }}
+                  placeholder={classificationType === 'product' ? "e.g. Red Shoe, Black Bag (Press Enter)" : "e.g. Studio, Outdoor (Press Enter)"}
+                  className="flex-1 bg-[#0B0B0D] border border-[#242428] focus:border-[#F5F5F5] rounded px-3.5 py-2 text-[13px] text-[#F5F5F5] placeholder-[#71717A] outline-none transition-colors"
+                />
+                <button
+                  onClick={() => {
+                    if (newCategory.trim() && !categories.includes(newCategory.trim())) {
+                      setCategories([...categories, newCategory.trim()]);
+                      setNewCategory('');
+                    }
+                  }}
+                  className="px-4 py-2 bg-[#242428] hover:bg-[#38383E] text-[#F5F5F5] text-[13px] rounded transition-colors"
+                >
+                  Add
+                </button>
+              </div>
+              <p className="text-[11px] text-[#71717A] mt-2">The AI will sort all {stagedFiles.length} images strictly into these folders.</p>
+            </div>
+          )}
 
           {/* Thumbnail Preview Strip */}
           <div className="mb-8">

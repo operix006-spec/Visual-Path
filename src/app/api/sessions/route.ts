@@ -3,11 +3,17 @@ import { db } from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
-    const { name } = await req.json().catch(() => ({ name: 'New Shoot' }));
+    const body = await req.json().catch(() => ({}));
+    const name = body.name || 'New Shoot';
+    const classificationType = body.classificationType || 'auto';
+    const customCategories = body.customCategories || null;
+
     const session = await db.session.create({
       data: {
-        name: name || 'New Shoot',
+        name,
         status: 'UPLOADING',
+        classificationType,
+        customCategories,
       },
     });
     return NextResponse.json(session);
