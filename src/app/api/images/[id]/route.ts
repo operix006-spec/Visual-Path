@@ -2,12 +2,14 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   try {
-    const optimizedPath = path.join(process.cwd(), 'storage', 'optimized', `${id}.webp`);
+    const STORAGE_ROOT = path.join(os.tmpdir(), 'visual-path-storage');
+    const optimizedPath = path.join(STORAGE_ROOT, 'optimized', `${id}.webp`);
     
     let filePath = optimizedPath;
     let mimeType = 'image/webp';

@@ -1,8 +1,9 @@
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 
-const STORAGE_ROOT = path.join(process.cwd(), 'storage');
+const STORAGE_ROOT = path.join(os.tmpdir(), 'visual-path-storage');
 const OPTIMIZED_DIR = path.join(STORAGE_ROOT, 'optimized');
 
 export class ImageService {
