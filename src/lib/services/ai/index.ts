@@ -5,7 +5,7 @@ export interface AIAnalysisResult {
 }
 
 export interface AIProvider {
-  analyzeImage(imagePath: string, instructions: string): Promise<AIAnalysisResult>;
+  analyzeImage(imagePath: string, instructions: string, allowedCategories?: string[]): Promise<AIAnalysisResult>;
 }
 
 import { GeminiAdapter } from './gemini';

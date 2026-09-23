@@ -88,12 +88,19 @@ Choose the single best matching category. Return ONLY the category name.`;
           defaultCategory = categoriesList[0];
         }
 
-        const aiResult = await aiProvider.analyzeImage(optimizedPath, instructions);
+        const aiResult = await aiProvider.analyzeImage(optimizedPath, instructions, categoriesList);
         
         // Ensure the AI returned one of the requested categories (if not auto)
         let finalClassification = aiResult.classification;
         if (!isAuto && categoriesList.length > 0) {
-           const matched = categoriesList.find(c => c.toLowerCase() === finalClassification.toLowerCase());
+           const clean = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+           const aiCleaned = clean(finalClassification);
+           
+           const matched = categoriesList.find(c => {
+             const catCleaned = clean(c);
+             return aiCleaned === catCleaned || aiCleaned.includes(catCleaned);
+           });
+           
            finalClassification = matched || defaultCategory;
         }
 
