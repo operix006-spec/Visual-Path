@@ -1,9 +1,10 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { ZipArchive } from 'archiver';
 import { db } from '@/lib/db';
 
-const STORAGE_ROOT = path.join(process.cwd(), 'storage');
+const STORAGE_ROOT = path.join(os.tmpdir(), 'visual-path-storage');
 const OUTPUTS_DIR = path.join(STORAGE_ROOT, 'outputs');
 
 export class PackagerService {

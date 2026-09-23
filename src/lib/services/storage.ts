@@ -1,7 +1,8 @@
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 
-const STORAGE_ROOT = path.join(process.cwd(), 'storage');
+const STORAGE_ROOT = path.join(os.tmpdir(), 'visual-path-storage');
 const ORIGINALS_DIR = path.join(STORAGE_ROOT, 'originals');
 
 export class StorageService {
