@@ -62,7 +62,11 @@ export class PackagerService {
         // archiver takes unix paths for internal zip structure
         const zipInternalPath = `${folderName}/${baseFilename}`;
 
-        archive.file(image.originalPath, { name: zipInternalPath });
+        if (fs.existsSync(image.originalPath)) {
+          archive.file(image.originalPath, { name: zipInternalPath });
+        } else {
+          console.warn(`File missing for zip: ${image.originalPath}`);
+        }
       }
 
       archive.finalize();

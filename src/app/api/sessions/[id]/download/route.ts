@@ -15,7 +15,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const fileStream = fs.createReadStream(session.outputFilePath);
     const stat = fs.statSync(session.outputFilePath);
 
-    return new NextResponse(fileStream as any, {
+    // Convert Node stream to Web stream for Next.js 13+ App Router
+    const { Readable } = require('stream');
+    const webStream = Readable.toWeb(fileStream);
+
+    return new NextResponse(webStream, {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Length': stat.size.toString(),
