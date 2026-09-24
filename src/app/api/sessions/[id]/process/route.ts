@@ -114,8 +114,8 @@ Choose the single best matching category. Return ONLY the category name.`;
         });
       }
 
-      // Pacing delay (3.5s) to stay safely within free-tier 15 RPM
-      await new Promise(res => setTimeout(res, 3500));
+      // Pacing delay (4.2s) to stay safely within free-tier 15 RPM
+      await new Promise(res => setTimeout(res, 4200));
     }
 
     const finalSession = await db.session.findUnique({ where: { id: sessionId }, select: { status: true } });
