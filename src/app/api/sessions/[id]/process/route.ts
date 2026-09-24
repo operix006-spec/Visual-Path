@@ -93,7 +93,7 @@ Choose the single best matching category. Return ONLY the category name.`;
         // Ensure the AI returned one of the requested categories (if not auto)
         let finalClassification = aiResult.classification;
         if (!isAuto && categoriesList.length > 0) {
-           const clean = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+           const clean = (str: string) => str.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
            const aiCleaned = clean(finalClassification);
            
            const matched = categoriesList.find(c => {
