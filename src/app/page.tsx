@@ -15,6 +15,9 @@ export default function Home() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [classificationType, setClassificationType] = useState<"auto" | "product" | "environment">("auto");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -52,8 +55,44 @@ export default function Home() {
     }
   };
 
+  const handleAddCategory = () => {
+    if (!newCategory.trim()) return;
+    const splitItems = newCategory
+      .split(/[,،]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const updated = [...categories];
+    for (const item of splitItems) {
+      if (!updated.includes(item)) {
+        updated.push(item);
+      }
+    }
+    setCategories(updated);
+    setNewCategory("");
+  };
+
   const handleStartProcessing = async () => {
     if (stagedFiles.length === 0 || isUploading) return;
+
+    let finalCategories = [...categories];
+    if (newCategory.trim()) {
+      const splitItems = newCategory
+        .split(/[,،]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      for (const item of splitItems) {
+        if (!finalCategories.includes(item)) {
+          finalCategories.push(item);
+        }
+      }
+      setCategories(finalCategories);
+      setNewCategory("");
+    }
+
+    if (classificationType !== "auto" && finalCategories.length < 2) {
+      alert("Please add at least 2 categories/folders (e.g. Matcha, Sandwich or Studio, Outdoor) so the AI can organize the photos.");
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -65,6 +104,8 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name: shootName.trim() || "Untitled Shoot",
+          classificationType,
+          customCategories: classificationType !== 'auto' ? finalCategories.join(',') : null,
         }),
       });
       const session = await sessionRes.json();
@@ -106,6 +147,8 @@ export default function Home() {
     setShootName("");
     setUploadProgress(0);
     setIsUploading(false);
+    setCategories([]);
+    setClassificationType("auto");
   };
 
   const totalSizeMB = (
@@ -119,17 +162,17 @@ export default function Home() {
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#38BDF8]">
-            Automated Studio Organizer
+            Studio Organizer
           </span>
           <span className="text-[10px] px-2 py-0.5 rounded bg-[#38BDF8]/10 text-[#38BDF8] border border-[#38BDF8]/30 font-mono">
-            New Version
+            v2.0
           </span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-[#F8FAFC] mb-2">
           Organize a photoshoot in seconds.
         </h1>
         <p className="text-[14px] text-[#94A3B8]">
-          Drop your unedited folder to automatically categorize and package original files by visual photographic style.
+          Drop your unedited folder to automatically categorize and package original files.
         </p>
       </div>
 
@@ -251,32 +294,135 @@ export default function Home() {
             />
           </div>
 
-          {/* Photographic Style Structure Overview */}
-          <div className="mb-6 p-4 rounded-xl border border-[#1E2D4A] bg-[#070B14]">
-            <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#38BDF8] mb-2">
-              Automatic Organization Pipeline
-            </div>
-            <p className="text-[12px] text-[#94A3B8] mb-3">
-              The AI will inspect every image and automatically sort it into professional photographic styles:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
-                ⚡ Dynamic Action & Splash
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
-                📦 Studio Product
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
-                ☕ Lifestyle Context
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
-                🔍 Macro Detail
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
-                🎬 Creative Mood Lighting
-              </span>
+          {/* Classification Strategy Field */}
+          <div className="mb-6">
+            <label className="block text-[11px] font-semibold tracking-[0.16em] uppercase text-[#64748B] mb-2">
+              Classification Strategy
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setClassificationType("auto")}
+                className={`py-2.5 px-3 rounded-lg text-[13px] font-medium transition-all text-center border ${
+                  classificationType === "auto"
+                    ? "bg-[#38BDF8] text-[#070B14] border-[#38BDF8] shadow-md shadow-[#38BDF8]/20"
+                    : "bg-[#162035] text-[#94A3B8] border-[#1E2D4A] hover:border-[#2E436B] hover:text-[#F8FAFC]"
+                }`}
+              >
+                Auto (Photographic Styles)
+              </button>
+              <button
+                type="button"
+                onClick={() => setClassificationType("product")}
+                className={`py-2.5 px-3 rounded-lg text-[13px] font-medium transition-all text-center border ${
+                  classificationType === "product"
+                    ? "bg-[#38BDF8] text-[#070B14] border-[#38BDF8] shadow-md shadow-[#38BDF8]/20"
+                    : "bg-[#162035] text-[#94A3B8] border-[#1E2D4A] hover:border-[#2E436B] hover:text-[#F8FAFC]"
+                }`}
+              >
+                By Product / Subject
+              </button>
+              <button
+                type="button"
+                onClick={() => setClassificationType("environment")}
+                className={`py-2.5 px-3 rounded-lg text-[13px] font-medium transition-all text-center border ${
+                  classificationType === "environment"
+                    ? "bg-[#38BDF8] text-[#070B14] border-[#38BDF8] shadow-md shadow-[#38BDF8]/20"
+                    : "bg-[#162035] text-[#94A3B8] border-[#1E2D4A] hover:border-[#2E436B] hover:text-[#F8FAFC]"
+                }`}
+              >
+                By Environment / Location
+              </button>
             </div>
           </div>
+
+          {/* Conditional Target Folders Input (if not auto) */}
+          {classificationType !== "auto" ? (
+            <div className="mb-6 p-4 rounded-xl border border-[#1E2D4A] bg-[#070B14]">
+              <label className="block text-[11px] font-semibold tracking-[0.16em] uppercase text-[#38BDF8] mb-2">
+                Target Folders ({categories.length} added)
+              </label>
+
+              {/* Tags display */}
+              {categories.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {categories.map((c, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-1.5 bg-[#162035] border border-[#1E2D4A] rounded-full px-3 py-1 text-[13px] text-[#F8FAFC]"
+                    >
+                      <span>{c}</span>
+                      <button
+                        type="button"
+                        onClick={() => setCategories(categories.filter((_, idx) => idx !== i))}
+                        className="text-[#64748B] hover:text-[#EF4444] transition-colors ml-0.5 text-xs font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Category input */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddCategory();
+                    }
+                  }}
+                  placeholder={
+                    classificationType === "product"
+                      ? "e.g. Matcha, Sandwich, Juice (Press Enter or use comma)"
+                      : "e.g. Studio, Outdoor, Café (Press Enter or use comma)"
+                  }
+                  className="flex-1 bg-[#0E1626] border border-[#1E2D4A] focus:border-[#38BDF8] rounded-lg px-3.5 py-2 text-[13px] text-[#F8FAFC] placeholder-[#64748B] outline-none transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCategory}
+                  className="px-4 py-2 bg-[#162035] hover:bg-[#1E2D4A] border border-[#1E2D4A] hover:border-[#2E436B] text-[#38BDF8] font-medium text-[13px] rounded-lg transition-colors"
+                >
+                  Add
+                </button>
+              </div>
+              <p className="text-[11px] text-[#64748B] mt-2">
+                The AI will examine each of the {stagedFiles.length} photos and strictly sort them into these folders.
+              </p>
+            </div>
+          ) : (
+            /* Auto Photographic Styles Explanation */
+            <div className="mb-6 p-4 rounded-xl border border-[#1E2D4A] bg-[#070B14]">
+              <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#38BDF8] mb-2">
+                Automated Photographic Styles
+              </div>
+              <p className="text-[12px] text-[#94A3B8] mb-3">
+                The AI will inspect every photo and automatically sort it into professional visual styles:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
+                  ⚡ Dynamic Action & Splash
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
+                  📦 Studio Product
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
+                  ☕ Lifestyle Context
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
+                  🔍 Macro Detail
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
+                  🎬 Creative Mood Lighting
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Thumbnail Preview Strip */}
           <div className="mb-8">

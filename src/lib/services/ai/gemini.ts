@@ -16,18 +16,22 @@ export class GeminiAdapter implements AIProvider {
                    
     const imageBuffer = await fs.readFile(imagePath);
 
+    const enums = (allowedCategories && allowedCategories.length > 0)
+      ? allowedCategories
+      : [
+          'Dynamic_Action_Splash',
+          'Studio_Product',
+          'Lifestyle_Context',
+          'Macro_CloseUp',
+          'Creative_Mood_Lighting'
+        ];
+
     const schema: Schema = {
       type: Type.OBJECT,
       properties: {
         classification: { 
           type: Type.STRING,
-          enum: [
-            'Dynamic_Action_Splash',
-            'Studio_Product',
-            'Lifestyle_Context',
-            'Macro_CloseUp',
-            'Creative_Mood_Lighting'
-          ]
+          enum: enums
         },
         confidence: { type: Type.NUMBER },
       },

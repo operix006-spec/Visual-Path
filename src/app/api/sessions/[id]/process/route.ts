@@ -30,8 +30,17 @@ async function processSession(sessionId: string) {
       where: { sessionId, processingStatus: 'PENDING' }
     });
 
+    const isAuto = !session.classificationType || session.classificationType === 'auto';
+    let categoriesList: string[] = [];
+    if (!isAuto && session.customCategories) {
+      categoriesList = session.customCategories.split(/[,،]/).map(c => c.trim()).filter(Boolean);
+    }
+
     const aiProvider = getAIProvider();
-    const instructions = `You are an elite photoshoot art director and asset manager.
+    let instructions = '';
+
+    if (isAuto || categoriesList.length === 0) {
+      instructions = `You are an elite photoshoot art director and asset manager.
 Analyze this photo and assign it to the SINGLE best matching photographic visual style:
 
 1. 'Dynamic_Action_Splash': High-speed action, floating ingredients/elements, flying particles, splash, levitation, dynamic commercial shot.
@@ -41,6 +50,15 @@ Analyze this photo and assign it to the SINGLE best matching photographic visual
 5. 'Creative_Mood_Lighting': Dramatic shadows, colored/neon gel lights, cinematic dark moody atmosphere, artistic backlighting.
 
 Choose the single best matching photographic style.`;
+    } else {
+      const catString = categoriesList.map((c, i) => `${i + 1}. '${c}'`).join('\n');
+      instructions = `You are an elite photoshoot art director and asset manager. The photographer has organized this shoot into specific categories:
+
+${catString}
+
+Analyze this photo and assign it to the SINGLE best matching category from this list based on its visual content.
+Choose the single best matching category. Return ONLY the category name.`;
+    }
 
     for (const image of images) {
       // Check for cancellation before processing each image
@@ -68,7 +86,11 @@ Choose the single best matching photographic style.`;
           }
         });
 
-        const aiResult = await aiProvider.analyzeImage(optimizedPath, instructions);
+        const aiResult = await aiProvider.analyzeImage(
+          optimizedPath,
+          instructions,
+          categoriesList.length > 0 ? categoriesList : undefined
+        );
 
         await db.image.update({
           where: { id: image.id },

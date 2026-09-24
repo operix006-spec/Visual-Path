@@ -36,6 +36,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       }
     }
 
+    // Ensure all user-defined custom categories appear even if 0 matching images
+    if (session.customCategories && session.classificationType !== 'auto') {
+      const definedList = session.customCategories.split(/[,،]/).map(c => c.trim()).filter(Boolean);
+      for (const cat of definedList) {
+        if (!(cat in categories)) {
+          categories[cat] = 0;
+          sampleImageIds[cat] = [];
+        }
+      }
+    }
+
     return NextResponse.json({
       id: session.id,
       name: session.name,
