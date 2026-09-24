@@ -30,7 +30,7 @@ async function processSession(sessionId: string) {
     const isAuto = !session.classificationType || session.classificationType === 'auto';
     let categoriesList: string[] = [];
     if (!isAuto && session.customCategories) {
-      categoriesList = session.customCategories.split(',').map(c => c.trim()).filter(Boolean);
+      categoriesList = session.customCategories.split(/[,،]/).map(c => c.trim()).filter(Boolean);
     }
 
     const images = await db.image.findMany({
@@ -65,7 +65,6 @@ async function processSession(sessionId: string) {
 
         const aiProvider = getAIProvider();
         let instructions = '';
-        let defaultCategory = 'Studio_Product';
 
         if (isAuto || categoriesList.length === 0) {
           instructions = `You are a professional photoshoot art director. Classify this photo into its photographic visual style:
@@ -83,9 +82,8 @@ Choose the single best matching photographic style.`;
 
 ${catString}
 
-Look at this image and assign it to EXACTLY one of these categories based on its visual features. If it perfectly matches none, assign it to the closest one.
+Look at this image and assign it to EXACTLY one of these categories based on its visual features. If it matches none, assign it to the closest one.
 Choose the single best matching category. Return ONLY the category name.`;
-          defaultCategory = categoriesList[0];
         }
 
         const aiResult = await aiProvider.analyzeImage(optimizedPath, instructions, categoriesList);
@@ -104,7 +102,7 @@ Choose the single best matching category. Return ONLY the category name.`;
                return aiCleaned === catCleaned || aiCleaned.includes(catCleaned);
              });
              
-             finalClassification = matched || defaultCategory;
+             finalClassification = matched || 'Uncategorized';
            }
         }
 

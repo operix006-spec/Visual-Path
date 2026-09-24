@@ -55,8 +55,44 @@ export default function Home() {
     }
   };
 
+  const handleAddCategory = () => {
+    if (!newCategory.trim()) return;
+    const splitItems = newCategory
+      .split(/[,،]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const updated = [...categories];
+    for (const item of splitItems) {
+      if (!updated.includes(item)) {
+        updated.push(item);
+      }
+    }
+    setCategories(updated);
+    setNewCategory("");
+  };
+
   const handleStartProcessing = async () => {
     if (stagedFiles.length === 0 || isUploading) return;
+
+    let finalCategories = [...categories];
+    if (newCategory.trim()) {
+      const splitItems = newCategory
+        .split(/[,،]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      for (const item of splitItems) {
+        if (!finalCategories.includes(item)) {
+          finalCategories.push(item);
+        }
+      }
+      setCategories(finalCategories);
+      setNewCategory("");
+    }
+
+    if (classificationType !== "auto" && finalCategories.length < 2) {
+      alert("Please add at least 2 categories (e.g. Gym Style, Cinematic Style) so the AI can organize the photos.");
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -69,7 +105,7 @@ export default function Home() {
         body: JSON.stringify({ 
           name: shootName.trim() || "Untitled Shoot",
           classificationType,
-          customCategories: categories.join(',')
+          customCategories: finalCategories.join(',')
         }),
       });
       const session = await sessionRes.json();
@@ -284,22 +320,15 @@ export default function Home() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      if (newCategory.trim() && !categories.includes(newCategory.trim())) {
-                        setCategories([...categories, newCategory.trim()]);
-                        setNewCategory('');
-                      }
+                      handleAddCategory();
                     }
                   }}
-                  placeholder={classificationType === 'product' ? "e.g. Red Shoe, Black Bag (Press Enter)" : "e.g. Studio, Outdoor (Press Enter)"}
+                  placeholder={classificationType === 'product' ? "e.g. Red Shoe, Black Bag (Press Enter or use comma)" : "e.g. Gym Style, Cinematic Style (Press Enter or use comma)"}
                   className="flex-1 bg-[#0B0B0D] border border-[#242428] focus:border-[#F5F5F5] rounded px-3.5 py-2 text-[13px] text-[#F5F5F5] placeholder-[#71717A] outline-none transition-colors"
                 />
                 <button
-                  onClick={() => {
-                    if (newCategory.trim() && !categories.includes(newCategory.trim())) {
-                      setCategories([...categories, newCategory.trim()]);
-                      setNewCategory('');
-                    }
-                  }}
+                  type="button"
+                  onClick={handleAddCategory}
                   className="px-4 py-2 bg-[#242428] hover:bg-[#38383E] text-[#F5F5F5] text-[13px] rounded transition-colors"
                 >
                   Add

@@ -24,6 +24,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const categories: Record<string, number> = {};
     const sampleImageIds: Record<string, string[]> = {};
 
+    // Initialize custom categories with 0 count so user can see all configured categories
+    if (session.customCategories && session.classificationType !== 'auto') {
+      const definedList = session.customCategories.split(/[,،]/).map(c => c.trim()).filter(Boolean);
+      for (const cat of definedList) {
+        categories[cat] = 0;
+        sampleImageIds[cat] = [];
+      }
+    }
+
     for (const img of session.images) {
       if (img.aiClassification) {
         categories[img.aiClassification] = (categories[img.aiClassification] || 0) + 1;
@@ -40,6 +49,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       id: session.id,
       name: session.name,
       status: session.status,
+      classificationType: session.classificationType,
+      customCategories: session.customCategories,
       outputFilePath: session.outputFilePath,
       stats: {
         totalImages,

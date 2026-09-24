@@ -9,6 +9,8 @@ interface SessionStatus {
   name: string;
   status: string;
   outputFilePath: string | null;
+  classificationType?: string | null;
+  customCategories?: string | null;
   stats: {
     totalImages: number;
     processedImages: number;
@@ -17,11 +19,24 @@ interface SessionStatus {
   };
 }
 
+interface ImageRecord {
+  id: string;
+  originalFilename: string;
+  aiClassification: string | null;
+  aiConfidence: number | null;
+  processingStatus: string;
+  errorMessage: string | null;
+  fileSize: number;
+}
+
 export default function SessionPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
   const [data, setData] = useState<SessionStatus | null>(null);
+  const [imagesDetail, setImagesDetail] = useState<ImageRecord[]>([]);
+  const [showInspector, setShowInspector] = useState(false);
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -199,6 +214,29 @@ export default function SessionPage() {
               </button>
 
               <button
+                onClick={async () => {
+                  if (!showInspector && imagesDetail.length === 0) {
+                    setIsLoadingImages(true);
+                    try {
+                      const res = await fetch(`/api/sessions/${id}/images`);
+                      if (res.ok) {
+                        const json = await res.json();
+                        setImagesDetail(json.images || []);
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setIsLoadingImages(false);
+                    }
+                  }
+                  setShowInspector(!showInspector);
+                }}
+                className="px-4 py-2.5 text-[13px] text-[#A1A1AA] hover:text-[#F5F5F5] bg-[#121214] hover:bg-[#17171A] border border-[#242428] rounded transition-colors flex items-center justify-center gap-2"
+              >
+                <span>{isLoadingImages ? "Loading..." : showInspector ? "Hide Details" : "Inspect Classifications"}</span>
+              </button>
+
+              <button
                 onClick={() => router.push("/")}
                 className="px-4 py-2.5 text-[13px] text-[#A1A1AA] hover:text-[#F5F5F5] bg-[#121214] hover:bg-[#17171A] border border-[#242428] rounded transition-colors"
               >
@@ -215,13 +253,19 @@ export default function SessionPage() {
             <span>·</span>
             <span>{stats.totalImages} original resolution files</span>
             <span>·</span>
-            <span>{categoryKeys.length} folders created</span>
+            <span>{categoryKeys.filter(k => (categories[k] || 0) > 0).length} folders populated</span>
+            {data.classificationType && data.classificationType !== 'auto' && (
+              <>
+                <span>·</span>
+                <span className="text-[#A1A1AA]">Strategy: {data.classificationType}</span>
+              </>
+            )}
           </div>
 
           {/* FOLDERS / COLLECTIONS Section (Visual Workspace) */}
-          <div className="mb-8">
+          <div className="mb-10">
             <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#71717A] mb-4">
-              Folders
+              Folders ({categoryKeys.length} categories)
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -248,7 +292,7 @@ export default function SessionPage() {
                           </svg>
                         </div>
                         <div>
-                          <div className="text-[13px] font-medium text-[#F5F5F5] capitalize">
+                          <div className="text-[13px] font-medium text-[#F5F5F5]">
                             {cleanFolderName(cat)}
                           </div>
                           <div className="text-[11px] text-[#71717A]">
@@ -301,8 +345,14 @@ export default function SessionPage() {
                             loading="lazy"
                           />
                         </div>
-                      ) : (
+                      ) : count === 0 ? (
                         /* Empty state inside folder */
+                        <div className="w-full h-full flex flex-col items-center justify-center text-center p-3 bg-[#17171A]/50 rounded-[2px]">
+                          <span className="text-[12px] text-[#A1A1AA] font-medium mb-1">0 matching photos</span>
+                          <span className="text-[10px] text-[#71717A]">AI found no photos matching this style</span>
+                        </div>
+                      ) : (
+                        /* No preview available */
                         <div className="w-full h-full flex items-center justify-center text-[11px] text-[#71717A]">
                           No preview
                         </div>
@@ -313,6 +363,46 @@ export default function SessionPage() {
               })}
             </div>
           </div>
+
+          {/* INSPECTION TABLE SECTION */}
+          {showInspector && (
+            <div className="border border-[#242428] rounded-lg bg-[#121214] p-6 mb-8 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-[15px] font-medium text-[#F5F5F5]">Image Classification Details</h3>
+                  <p className="text-[12px] text-[#71717A]">Review raw AI classification and confidence score per image</p>
+                </div>
+                <span className="text-[11px] font-mono text-[#A1A1AA]">{imagesDetail.length} images</span>
+              </div>
+
+              <div className="max-h-96 overflow-y-auto border border-[#242428] rounded divide-y divide-[#242428]">
+                {imagesDetail.map((img) => (
+                  <div key={img.id} className="p-3 text-[12px] flex items-center justify-between hover:bg-[#17171A]/40 transition-colors">
+                    <div className="flex items-center gap-3 truncate max-w-sm">
+                      <span className="font-mono text-[#F5F5F5] truncate">{img.originalFilename}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      {img.errorMessage && (
+                        <span className="text-[11px] text-[#EF4444] truncate max-w-xs">{img.errorMessage}</span>
+                      )}
+                      <span className={`px-2 py-0.5 rounded text-[11px] border font-medium ${
+                        img.aiClassification === 'Uncategorized' 
+                          ? 'bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]'
+                          : 'bg-[#17171A] border-[#242428] text-[#F5F5F5]'
+                      }`}>
+                        {img.aiClassification || 'Pending'}
+                      </span>
+                      {img.aiConfidence !== null && (
+                        <span className="text-[11px] text-[#71717A] font-mono w-12 text-right">
+                          {Math.round(img.aiConfidence * 100)}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </main>

@@ -53,8 +53,8 @@ export class PackagerService {
         if (!image.originalPath) continue;
 
         const classification = image.aiClassification || 'Studio_Product';
-        // Sanitize classification for folder name
-        const folderName = classification.replace(/[^a-z0-9_-]/gi, '_');
+        // Sanitize classification for folder name (support Arabic and Unicode)
+        const folderName = classification.replace(/[^\p{L}\p{N}_-]/gu, '_');
         
         // Inside the zip, structure will be: Classification/OriginalFilename (no extra folders)
         const baseFilename = path.basename(image.originalFilename);
