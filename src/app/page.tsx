@@ -15,9 +15,6 @@ export default function Home() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [classificationType, setClassificationType] = useState<"auto" | "product" | "environment">("auto");
-  const [categories, setCategories] = useState<string[]>([]);
-  const [newCategory, setNewCategory] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -55,44 +52,8 @@ export default function Home() {
     }
   };
 
-  const handleAddCategory = () => {
-    if (!newCategory.trim()) return;
-    const splitItems = newCategory
-      .split(/[,،]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const updated = [...categories];
-    for (const item of splitItems) {
-      if (!updated.includes(item)) {
-        updated.push(item);
-      }
-    }
-    setCategories(updated);
-    setNewCategory("");
-  };
-
   const handleStartProcessing = async () => {
     if (stagedFiles.length === 0 || isUploading) return;
-
-    let finalCategories = [...categories];
-    if (newCategory.trim()) {
-      const splitItems = newCategory
-        .split(/[,،]/)
-        .map((s) => s.trim())
-        .filter(Boolean);
-      for (const item of splitItems) {
-        if (!finalCategories.includes(item)) {
-          finalCategories.push(item);
-        }
-      }
-      setCategories(finalCategories);
-      setNewCategory("");
-    }
-
-    if (classificationType !== "auto" && finalCategories.length < 2) {
-      alert("Please add at least 2 categories (e.g. Gym Style, Cinematic Style) so the AI can organize the photos.");
-      return;
-    }
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -104,15 +65,13 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name: shootName.trim() || "Untitled Shoot",
-          classificationType,
-          customCategories: finalCategories.join(',')
         }),
       });
       const session = await sessionRes.json();
 
       if (!session.id) throw new Error("Failed to initialize session");
 
-      // 2. Upload Files sequentially
+      // Upload Files sequentially
       const total = stagedFiles.length;
       for (let i = 0; i < total; i++) {
         setCurrentFileIndex(i + 1);
@@ -129,10 +88,10 @@ export default function Home() {
         setUploadProgress(Math.round(((i + 1) / total) * 100));
       }
 
-      // 3. Trigger processing pipeline
+      // Trigger processing pipeline
       await fetch(`/api/sessions/${session.id}/process`, { method: "POST" }).catch(() => {});
 
-      // 4. Redirect to processing/results view
+      // Redirect to processing/results view
       router.push(`/session/${session.id}`);
     } catch (error) {
       console.error(error);
@@ -147,8 +106,6 @@ export default function Home() {
     setShootName("");
     setUploadProgress(0);
     setIsUploading(false);
-    setCategories([]);
-    setClassificationType("auto");
   };
 
   const totalSizeMB = (
@@ -167,7 +124,7 @@ export default function Home() {
           Organize a photoshoot in seconds.
         </h1>
         <p className="text-[14px] text-[#A1A1AA]">
-          Drop your unedited folder to automatically categorize and package original files.
+          Drop your unedited folder to automatically categorize and package original files by visual photographic style.
         </p>
       </div>
 
@@ -195,7 +152,7 @@ export default function Home() {
           }`}
         >
           <div className="max-w-sm mx-auto flex flex-col items-center">
-            {/* Minimal SVG folder icon */}
+            {/* Folder icon */}
             <div className="w-10 h-10 rounded border border-[#242428] bg-[#17171A] flex items-center justify-center text-[#A1A1AA] mb-4">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -254,7 +211,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        /* Staged Review & Analyze State (User Requested) */
+        /* Staged Review & Analyze State */
         <div className="border border-[#242428] rounded-lg bg-[#121214] p-6 sm:p-8">
           {/* Metadata Bar */}
           <div className="flex items-center justify-between pb-6 mb-6 border-b border-[#242428]">
@@ -289,54 +246,32 @@ export default function Home() {
             />
           </div>
 
-          {/* Classification Strategy Field */}
-          <div className="mb-6">
-            <label className="block text-[11px] font-semibold tracking-[0.16em] uppercase text-[#71717A] mb-2">
-              Classification Strategy
-            </label>
-            <div className="flex gap-2">
-              <button onClick={() => setClassificationType('auto')} className={`flex-1 py-2 rounded text-[13px] border ${classificationType === 'auto' ? 'bg-[#F5F5F5] text-[#0B0B0D] border-[#F5F5F5]' : 'bg-[#0B0B0D] text-[#A1A1AA] border-[#242428]'}`}>Auto (AI Choice)</button>
-              <button onClick={() => setClassificationType('product')} className={`flex-1 py-2 rounded text-[13px] border ${classificationType === 'product' ? 'bg-[#F5F5F5] text-[#0B0B0D] border-[#F5F5F5]' : 'bg-[#0B0B0D] text-[#A1A1AA] border-[#242428]'}`}>By Product</button>
-              <button onClick={() => setClassificationType('environment')} className={`flex-1 py-2 rounded text-[13px] border ${classificationType === 'environment' ? 'bg-[#F5F5F5] text-[#0B0B0D] border-[#F5F5F5]' : 'bg-[#0B0B0D] text-[#A1A1AA] border-[#242428]'}`}>By Environment</button>
+          {/* Photographic Style Structure Overview */}
+          <div className="mb-6 p-4 rounded border border-[#242428] bg-[#0E0E10]">
+            <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#71717A] mb-2">
+              Automatic Organization Pipeline
+            </div>
+            <p className="text-[12px] text-[#A1A1AA] mb-3">
+              The AI will inspect every original image and sort it into professional photographic styles:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+                ⚡ Dynamic Action & Splash
+              </span>
+              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+                📦 Studio Product
+              </span>
+              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+                ☕ Lifestyle Context
+              </span>
+              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+                🔍 Macro Detail
+              </span>
+              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+                🎬 Creative Mood Lighting
+              </span>
             </div>
           </div>
-
-          {classificationType !== 'auto' && (
-            <div className="mb-6">
-              <label className="block text-[11px] font-semibold tracking-[0.16em] uppercase text-[#71717A] mb-2">Target Folders (Categories)</label>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {categories.map((c, i) => (
-                  <div key={i} className="flex items-center gap-1 bg-[#17171A] border border-[#242428] rounded-full px-3 py-1 text-[13px] text-[#F5F5F5]">
-                    <span>{c}</span>
-                    <button onClick={() => setCategories(categories.filter((_, idx) => idx !== i))} className="text-[#71717A] hover:text-[#F5F5F5]">✕</button>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddCategory();
-                    }
-                  }}
-                  placeholder={classificationType === 'product' ? "e.g. Red Shoe, Black Bag (Press Enter or use comma)" : "e.g. Gym Style, Cinematic Style (Press Enter or use comma)"}
-                  className="flex-1 bg-[#0B0B0D] border border-[#242428] focus:border-[#F5F5F5] rounded px-3.5 py-2 text-[13px] text-[#F5F5F5] placeholder-[#71717A] outline-none transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddCategory}
-                  className="px-4 py-2 bg-[#242428] hover:bg-[#38383E] text-[#F5F5F5] text-[13px] rounded transition-colors"
-                >
-                  Add
-                </button>
-              </div>
-              <p className="text-[11px] text-[#71717A] mt-2">The AI will sort all {stagedFiles.length} images strictly into these folders.</p>
-            </div>
-          )}
 
           {/* Thumbnail Preview Strip */}
           <div className="mb-8">
@@ -365,7 +300,7 @@ export default function Home() {
             onClick={handleStartProcessing}
             className="w-full bg-[#F5F5F5] hover:bg-[#E4E4E7] text-[#0B0B0D] font-medium text-[14px] py-3 rounded transition-colors flex items-center justify-center gap-2 cursor-pointer active:translate-y-[1px]"
           >
-            <span>Analyze Shoot</span>
+            <span>Organize Shoot</span>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>

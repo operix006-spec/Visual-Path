@@ -87,7 +87,20 @@ export default function SessionPage() {
   const categoryKeys = Object.keys(categories);
 
   const cleanFolderName = (key: string) => {
-    return key.replace(/_/g, " ");
+    switch (key) {
+      case 'Dynamic_Action_Splash':
+        return 'Dynamic Action & Splash';
+      case 'Studio_Product':
+        return 'Studio Product';
+      case 'Lifestyle_Context':
+        return 'Lifestyle & Context';
+      case 'Macro_CloseUp':
+        return 'Macro & Detail';
+      case 'Creative_Mood_Lighting':
+        return 'Creative Mood Lighting';
+      default:
+        return key.replace(/_/g, " ");
+    }
   };
 
   return (
@@ -253,19 +266,13 @@ export default function SessionPage() {
             <span>·</span>
             <span>{stats.totalImages} original resolution files</span>
             <span>·</span>
-            <span>{categoryKeys.filter(k => (categories[k] || 0) > 0).length} folders populated</span>
-            {data.classificationType && data.classificationType !== 'auto' && (
-              <>
-                <span>·</span>
-                <span className="text-[#A1A1AA]">Strategy: {data.classificationType}</span>
-              </>
-            )}
+            <span>{categoryKeys.length} {categoryKeys.length === 1 ? "folder" : "folders"} created</span>
           </div>
 
           {/* FOLDERS / COLLECTIONS Section (Visual Workspace) */}
           <div className="mb-10">
             <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#71717A] mb-4">
-              Folders ({categoryKeys.length} categories)
+              Organized Folders
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

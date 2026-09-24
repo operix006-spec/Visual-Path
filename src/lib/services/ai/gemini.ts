@@ -16,22 +16,18 @@ export class GeminiAdapter implements AIProvider {
                    
     const imageBuffer = await fs.readFile(imagePath);
 
-    const enums = (allowedCategories && allowedCategories.length > 0) 
-      ? allowedCategories 
-      : [
-          'Dynamic_Action_Splash',
-          'Studio_Product',
-          'Lifestyle_Context',
-          'Macro_CloseUp',
-          'Creative_Mood_Lighting'
-        ];
-
     const schema: Schema = {
       type: Type.OBJECT,
       properties: {
         classification: { 
           type: Type.STRING,
-          enum: enums
+          enum: [
+            'Dynamic_Action_Splash',
+            'Studio_Product',
+            'Lifestyle_Context',
+            'Macro_CloseUp',
+            'Creative_Mood_Lighting'
+          ]
         },
         confidence: { type: Type.NUMBER },
       },
@@ -73,14 +69,13 @@ export class GeminiAdapter implements AIProvider {
         const isRateLimitOrBusy = errStr.includes('429') || errStr.includes('503') || errStr.includes('RESOURCE_EXHAUSTED') || errStr.includes('UNAVAILABLE');
 
         if (isRateLimitOrBusy && attempts < maxAttempts) {
-          const waitTime = attempts * 3000;
-          console.warn(`[GeminiAdapter] Rate limit or high demand hit (attempt ${attempts}/${maxAttempts}). Waiting ${waitTime}ms before retry...`);
+          const waitTime = attempts * 3500;
+          console.warn(`[GeminiAdapter] High demand or rate limit (attempt ${attempts}/${maxAttempts}). Waiting ${waitTime}ms...`);
           await sleep(waitTime);
           continue;
         }
 
         console.error(`[GeminiAdapter] Failed to analyze image after ${attempts} attempts:`, errStr);
-        // Graceful fallback to Uncategorized
         return {
           classification: 'Uncategorized',
           confidence: 0.0,

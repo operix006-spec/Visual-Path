@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { ImageService } from '@/lib/services/image';
 import { getAIProvider } from '@/lib/services/ai';
-
 import { PackagerService } from '@/lib/services/packager';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -27,22 +26,28 @@ async function processSession(sessionId: string) {
     const session = await db.session.findUnique({ where: { id: sessionId } });
     if (!session) return;
 
-    const isAuto = !session.classificationType || session.classificationType === 'auto';
-    let categoriesList: string[] = [];
-    if (!isAuto && session.customCategories) {
-      categoriesList = session.customCategories.split(/[,،]/).map(c => c.trim()).filter(Boolean);
-    }
-
     const images = await db.image.findMany({
       where: { sessionId, processingStatus: 'PENDING' }
     });
+
+    const aiProvider = getAIProvider();
+    const instructions = `You are an elite photoshoot art director and asset manager.
+Analyze this photo and assign it to the SINGLE best matching photographic visual style:
+
+1. 'Dynamic_Action_Splash': High-speed action, floating ingredients/elements, flying particles, splash, levitation, dynamic commercial shot.
+2. 'Studio_Product': Clean product shot on studio backdrop (seamless white, black, or colored background), clean centered lighting.
+3. 'Lifestyle_Context': Real-life context, hands holding the product, person with product, desk, table, café, counter, environmental lifestyle.
+4. 'Macro_CloseUp': Extreme close-up shot focusing on texture, drips, ingredients, or fine product details.
+5. 'Creative_Mood_Lighting': Dramatic shadows, colored/neon gel lights, cinematic dark moody atmosphere, artistic backlighting.
+
+Choose the single best matching photographic style.`;
 
     for (const image of images) {
       // Check for cancellation before processing each image
       const currentSession = await db.session.findUnique({ where: { id: sessionId }, select: { status: true } });
       if (currentSession?.status === 'CANCELLED') {
         console.log(`Session ${sessionId} was cancelled by user.`);
-        break; // Exit the loop
+        break;
       }
 
       // 1. Optimize
@@ -63,54 +68,13 @@ async function processSession(sessionId: string) {
           }
         });
 
-        const aiProvider = getAIProvider();
-        let instructions = '';
-
-        if (isAuto || categoriesList.length === 0) {
-          instructions = `You are a professional photoshoot art director. Classify this photo into its photographic visual style:
-
-1. 'Dynamic_Action_Splash': High-speed action, floating ingredients/elements, flying particles, splash, levitation, dynamic commercial shot.
-2. 'Studio_Product': Clean product shot on studio backdrop (seamless white, black, or colored background), clean centered lighting.
-3. 'Lifestyle_Context': Real-life context, hands holding the product, person with product, desk, table, café, counter, environmental lifestyle.
-4. 'Macro_CloseUp': Extreme close-up shot focusing on texture, drips, ingredients, or fine product details.
-5. 'Creative_Mood_Lighting': Dramatic shadows, colored/neon gel lights, cinematic dark moody atmosphere, artistic backlighting.
-
-Choose the single best matching photographic style.`;
-        } else {
-          const catString = categoriesList.map((c, i) => `${i + 1}. '${c}'`).join('\n');
-          instructions = `You are a professional photoshoot art director. The photographer has defined the following specific categories for this shoot based on ${session.classificationType}:
-
-${catString}
-
-Look at this image and assign it to EXACTLY one of these categories based on its visual features. If it matches none, assign it to the closest one.
-Choose the single best matching category. Return ONLY the category name.`;
-        }
-
-        const aiResult = await aiProvider.analyzeImage(optimizedPath, instructions, categoriesList);
-        
-        // Ensure the AI returned one of the requested categories (if not auto)
-        let finalClassification = aiResult.classification;
-        if (!isAuto && categoriesList.length > 0) {
-           if (finalClassification === 'Uncategorized') {
-             // Keep it as Uncategorized on error
-           } else {
-             const clean = (str: string) => str.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-             const aiCleaned = clean(finalClassification);
-             
-             const matched = categoriesList.find(c => {
-               const catCleaned = clean(c);
-               return aiCleaned === catCleaned || aiCleaned.includes(catCleaned);
-             });
-             
-             finalClassification = matched || 'Uncategorized';
-           }
-        }
+        const aiResult = await aiProvider.analyzeImage(optimizedPath, instructions);
 
         await db.image.update({
           where: { id: image.id },
           data: { 
             processingStatus: 'COMPLETED',
-            aiClassification: finalClassification,
+            aiClassification: aiResult.classification,
             aiConfidence: aiResult.confidence,
             errorMessage: aiResult.metadata?.error ? String(aiResult.metadata.error) : null
           }
@@ -128,13 +92,13 @@ Choose the single best matching category. Return ONLY the category name.`;
         });
       }
 
-      // Small pacing delay to prevent hitting rate limit bursts (15 RPM for Gemini free tier)
-      await new Promise(res => setTimeout(res, 4000));
+      // Pacing delay (3.5s) to stay safely within free-tier 15 RPM
+      await new Promise(res => setTimeout(res, 3500));
     }
 
     const finalSession = await db.session.findUnique({ where: { id: sessionId }, select: { status: true } });
     if (finalSession?.status === 'CANCELLED') {
-      return; // Do not package if cancelled
+      return;
     }
 
     // Mark as building output
