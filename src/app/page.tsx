@@ -117,13 +117,18 @@ export default function Home() {
     <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-16 flex flex-col justify-center">
       {/* View Header */}
       <div className="mb-8">
-        <div className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#71717A] mb-2">
-          New Shoot
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#38BDF8]">
+            Automated Studio Organizer
+          </span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-[#38BDF8]/10 text-[#38BDF8] border border-[#38BDF8]/30 font-mono">
+            New Version
+          </span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-[#F5F5F5] mb-2">
+        <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-[#F8FAFC] mb-2">
           Organize a photoshoot in seconds.
         </h1>
-        <p className="text-[14px] text-[#A1A1AA]">
+        <p className="text-[14px] text-[#94A3B8]">
           Drop your unedited folder to automatically categorize and package original files by visual photographic style.
         </p>
       </div>
@@ -145,16 +150,16 @@ export default function Home() {
             }
           }}
           onClick={() => fileInputRef.current?.click()}
-          className={`border rounded-lg p-16 sm:p-20 text-center transition-all cursor-pointer select-none bg-[#121214] ${
+          className={`border rounded-xl p-16 sm:p-20 text-center transition-all cursor-pointer select-none bg-[#0E1626] shadow-xl ${
             isDragging
-              ? "border-[#F5F5F5] bg-[#17171A]"
-              : "border-[#242428] hover:border-[#38383E]"
+              ? "border-[#38BDF8] bg-[#162035]"
+              : "border-[#1E2D4A] hover:border-[#2E436B] hover:bg-[#121B2F]"
           }`}
         >
           <div className="max-w-sm mx-auto flex flex-col items-center">
             {/* Folder icon */}
-            <div className="w-10 h-10 rounded border border-[#242428] bg-[#17171A] flex items-center justify-center text-[#A1A1AA] mb-4">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-12 h-12 rounded-xl border border-[#1E2D4A] bg-[#162035] flex items-center justify-center text-[#38BDF8] mb-4 shadow-inner">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -164,47 +169,47 @@ export default function Home() {
               </svg>
             </div>
 
-            <p className="text-[14px] font-medium text-[#F5F5F5] mb-1">
+            <p className="text-[15px] font-medium text-[#F8FAFC] mb-1">
               Drop your photoshoot folder here
             </p>
-            <p className="text-[12px] text-[#71717A] mb-4">or</p>
+            <p className="text-[12px] text-[#64748B] mb-4">or</p>
 
             <button
               type="button"
-              className="px-4 py-2 text-[13px] font-medium text-[#F5F5F5] bg-[#17171A] hover:bg-[#242428] border border-[#242428] rounded transition-colors"
+              className="px-5 py-2.5 text-[13px] font-medium text-[#F8FAFC] bg-[#162035] hover:bg-[#1E2D4A] border border-[#1E2D4A] hover:border-[#2E436B] rounded-lg transition-colors shadow-sm"
             >
               Browse folder
             </button>
 
-            <div className="mt-8 pt-6 border-t border-[#242428]/60 w-full">
-              <p className="text-[11px] text-[#71717A] tracking-wide">
-                RAW, JPEG, PNG, TIFF · Originals preserved at full resolution
+            <div className="mt-8 pt-6 border-t border-[#1E2D4A]/60 w-full">
+              <p className="text-[11px] text-[#64748B] tracking-wide">
+                RAW, JPEG, PNG, TIFF · Full original resolution preserved
               </p>
             </div>
           </div>
         </div>
       ) : isUploading ? (
         /* Focused Uploading State */
-        <div className="border border-[#242428] rounded-lg bg-[#121214] p-12 text-center">
+        <div className="border border-[#1E2D4A] rounded-xl bg-[#0E1626] p-12 text-center shadow-xl">
           <div className="max-w-md mx-auto">
-            <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#71717A] mb-2">
+            <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#38BDF8] mb-2">
               Transferring
             </div>
-            <h2 className="text-xl font-medium text-[#F5F5F5] mb-1">
+            <h2 className="text-xl font-medium text-[#F8FAFC] mb-1">
               Uploading original photos
             </h2>
-            <p className="text-[13px] text-[#A1A1AA] mb-6">
+            <p className="text-[13px] text-[#94A3B8] mb-6">
               File {currentFileIndex} of {stagedFiles.length}
             </p>
 
-            <div className="w-full bg-[#17171A] h-1.5 rounded-full overflow-hidden mb-3 border border-[#242428]">
+            <div className="w-full bg-[#162035] h-2 rounded-full overflow-hidden mb-3 border border-[#1E2D4A]">
               <div
-                className="bg-[#F5F5F5] h-full transition-all duration-200"
+                className="bg-gradient-to-r from-[#38BDF8] to-[#60A5FA] h-full transition-all duration-200"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
 
-            <div className="flex justify-between text-[11px] text-[#71717A]">
+            <div className="flex justify-between text-[11px] text-[#64748B]">
               <span>Original resolution</span>
               <span>{uploadProgress}%</span>
             </div>
@@ -212,21 +217,21 @@ export default function Home() {
         </div>
       ) : (
         /* Staged Review & Analyze State */
-        <div className="border border-[#242428] rounded-lg bg-[#121214] p-6 sm:p-8">
+        <div className="border border-[#1E2D4A] rounded-xl bg-[#0E1626] p-6 sm:p-8 shadow-xl">
           {/* Metadata Bar */}
-          <div className="flex items-center justify-between pb-6 mb-6 border-b border-[#242428]">
+          <div className="flex items-center justify-between pb-6 mb-6 border-b border-[#1E2D4A]">
             <div>
-              <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#71717A] mb-1">
+              <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#38BDF8] mb-1">
                 Folder Selected
               </div>
-              <div className="text-[15px] font-medium text-[#F5F5F5]">
+              <div className="text-[15px] font-medium text-[#F8FAFC]">
                 {stagedFiles.length} images · {totalSizeMB} MB
               </div>
             </div>
 
             <button
               onClick={handleReset}
-              className="text-[12px] text-[#71717A] hover:text-[#F5F5F5] px-3 py-1.5 border border-[#242428] hover:border-[#38383E] rounded transition-colors"
+              className="text-[12px] text-[#94A3B8] hover:text-[#F8FAFC] px-3 py-1.5 border border-[#1E2D4A] hover:border-[#2E436B] rounded-lg transition-colors bg-[#162035]"
             >
               Change folder
             </button>
@@ -234,7 +239,7 @@ export default function Home() {
 
           {/* Shoot Name Field */}
           <div className="mb-6">
-            <label className="block text-[11px] font-semibold tracking-[0.16em] uppercase text-[#71717A] mb-2">
+            <label className="block text-[11px] font-semibold tracking-[0.16em] uppercase text-[#64748B] mb-2">
               Shoot Name
             </label>
             <input
@@ -242,32 +247,32 @@ export default function Home() {
               value={shootName}
               onChange={(e) => setShootName(e.target.value)}
               placeholder="e.g. Campaign Lookbook"
-              className="w-full bg-[#0B0B0D] border border-[#242428] focus:border-[#F5F5F5] rounded px-3.5 py-2.5 text-[14px] text-[#F5F5F5] placeholder-[#71717A] outline-none transition-colors"
+              className="w-full bg-[#070B14] border border-[#1E2D4A] focus:border-[#38BDF8] rounded-lg px-3.5 py-2.5 text-[14px] text-[#F8FAFC] placeholder-[#64748B] outline-none transition-colors"
             />
           </div>
 
           {/* Photographic Style Structure Overview */}
-          <div className="mb-6 p-4 rounded border border-[#242428] bg-[#0E0E10]">
-            <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#71717A] mb-2">
+          <div className="mb-6 p-4 rounded-xl border border-[#1E2D4A] bg-[#070B14]">
+            <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#38BDF8] mb-2">
               Automatic Organization Pipeline
             </div>
-            <p className="text-[12px] text-[#A1A1AA] mb-3">
-              The AI will inspect every original image and sort it into professional photographic styles:
+            <p className="text-[12px] text-[#94A3B8] mb-3">
+              The AI will inspect every image and automatically sort it into professional photographic styles:
             </p>
             <div className="flex flex-wrap gap-2">
-              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
                 ⚡ Dynamic Action & Splash
               </span>
-              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
                 📦 Studio Product
               </span>
-              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
                 ☕ Lifestyle Context
               </span>
-              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
                 🔍 Macro Detail
               </span>
-              <span className="px-2.5 py-1 rounded bg-[#17171A] border border-[#242428] text-[12px] text-[#F5F5F5]">
+              <span className="px-2.5 py-1 rounded-lg bg-[#162035] border border-[#1E2D4A] text-[12px] text-[#F8FAFC]">
                 🎬 Creative Mood Lighting
               </span>
             </div>
@@ -275,14 +280,14 @@ export default function Home() {
 
           {/* Thumbnail Preview Strip */}
           <div className="mb-8">
-            <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#71717A] mb-3">
+            <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-[#64748B] mb-3">
               Preview (First {Math.min(stagedFiles.length, 12)} of {stagedFiles.length})
             </div>
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-1.5">
               {stagedFiles.slice(0, 12).map((item, idx) => (
                 <div
                   key={idx}
-                  className="aspect-square rounded border border-[#242428] bg-[#0B0B0D] overflow-hidden"
+                  className="aspect-square rounded-lg border border-[#1E2D4A] bg-[#070B14] overflow-hidden"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -298,11 +303,11 @@ export default function Home() {
           {/* Primary Action Button */}
           <button
             onClick={handleStartProcessing}
-            className="w-full bg-[#F5F5F5] hover:bg-[#E4E4E7] text-[#0B0B0D] font-medium text-[14px] py-3 rounded transition-colors flex items-center justify-center gap-2 cursor-pointer active:translate-y-[1px]"
+            className="w-full bg-[#38BDF8] hover:bg-[#0EA5E9] text-[#070B14] font-semibold text-[14px] py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#38BDF8]/20 active:translate-y-[1px]"
           >
             <span>Organize Shoot</span>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </button>
         </div>
