@@ -80,15 +80,15 @@ export class GeminiAdapter implements AIProvider {
         }
 
         console.error(`[GeminiAdapter] Failed to analyze image after ${attempts} attempts:`, errStr);
-        // Graceful fallback to Studio_Product
+        // Graceful fallback to Uncategorized
         return {
-          classification: 'Studio_Product',
-          confidence: 0.5,
+          classification: 'Uncategorized',
+          confidence: 0.0,
           metadata: { error: errStr }
         };
       }
     }
 
-    return { classification: 'Studio_Product', confidence: 0.5 };
+    return { classification: 'Uncategorized', confidence: 0.0 };
   }
 }

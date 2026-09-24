@@ -93,15 +93,19 @@ Choose the single best matching category. Return ONLY the category name.`;
         // Ensure the AI returned one of the requested categories (if not auto)
         let finalClassification = aiResult.classification;
         if (!isAuto && categoriesList.length > 0) {
-           const clean = (str: string) => str.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-           const aiCleaned = clean(finalClassification);
-           
-           const matched = categoriesList.find(c => {
-             const catCleaned = clean(c);
-             return aiCleaned === catCleaned || aiCleaned.includes(catCleaned);
-           });
-           
-           finalClassification = matched || defaultCategory;
+           if (finalClassification === 'Uncategorized') {
+             // Keep it as Uncategorized on error
+           } else {
+             const clean = (str: string) => str.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+             const aiCleaned = clean(finalClassification);
+             
+             const matched = categoriesList.find(c => {
+               const catCleaned = clean(c);
+               return aiCleaned === catCleaned || aiCleaned.includes(catCleaned);
+             });
+             
+             finalClassification = matched || defaultCategory;
+           }
         }
 
         await db.image.update({
@@ -109,7 +113,8 @@ Choose the single best matching category. Return ONLY the category name.`;
           data: { 
             processingStatus: 'COMPLETED',
             aiClassification: finalClassification,
-            aiConfidence: aiResult.confidence
+            aiConfidence: aiResult.confidence,
+            errorMessage: aiResult.metadata?.error ? String(aiResult.metadata.error) : null
           }
         });
       } catch (err) {
@@ -118,15 +123,15 @@ Choose the single best matching category. Return ONLY the category name.`;
           where: { id: image.id },
           data: { 
             processingStatus: 'COMPLETED',
-            aiClassification: 'Studio_Product',
-            aiConfidence: 0.5,
+            aiClassification: 'Uncategorized',
+            aiConfidence: 0.0,
             errorMessage: String(err)
           }
         });
       }
 
-      // Small pacing delay to prevent hitting rate limit bursts
-      await new Promise(res => setTimeout(res, 600));
+      // Small pacing delay to prevent hitting rate limit bursts (15 RPM for Gemini free tier)
+      await new Promise(res => setTimeout(res, 4000));
     }
 
     const finalSession = await db.session.findUnique({ where: { id: sessionId }, select: { status: true } });
