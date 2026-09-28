@@ -52,12 +52,31 @@ Analyze this photo and assign it to the SINGLE best matching photographic visual
 Choose the single best matching photographic style.`;
     } else {
       const catString = categoriesList.map((c, i) => `${i + 1}. '${c}'`).join('\n');
-      instructions = `You are an elite photoshoot art director and asset manager. The photographer has organized this shoot into specific categories:
+      
+      if (session.classificationType === 'product') {
+        instructions = `You are an elite photoshoot art director. The photographer wants to sort these photos by the main PRODUCT or SUBJECT.
+The requested product categories are:
+
+${catString}
+
+Carefully analyze the main subject/product in this photo. Assign it to the SINGLE best matching category from the list.
+Choose the single best matching category. Return ONLY the category name exactly as written.`;
+      } else if (session.classificationType === 'environment') {
+        instructions = `You are an elite photoshoot art director. The photographer wants to sort these photos by their ENVIRONMENT, BACKGROUND, or SETTING.
+The requested environment categories are:
+
+${catString}
+
+Carefully analyze the background, location, and setting of this photo. Assign it to the SINGLE best matching category from the list.
+Choose the single best matching category. Return ONLY the category name exactly as written.`;
+      } else {
+        instructions = `You are an elite photoshoot art director and asset manager. The photographer has organized this shoot into specific categories:
 
 ${catString}
 
 Analyze this photo and assign it to the SINGLE best matching category from this list based on its visual content.
 Choose the single best matching category. Return ONLY the category name.`;
+      }
     }
 
     for (const image of images) {
